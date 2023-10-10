@@ -15,22 +15,51 @@ from pip import main
 print(os.getcwd())
 print(os.path.dirname(__file__))
 data_path=os.path.dirname(__file__)
-file_name="test_data.csv"
+file_name="testing_cleanup.csv"
 name_to_read=os.path.join(data_path,file_name)
+il=[1,2,3,4]
+names=[]
+tempnames=[]
+for i in il:
+      names.append("addr"+str(i))
+      tempnames.append("temp"+str(i))
+print(names)
+print(tempnames)
+my_list = ["apple", "banana", "cherry"]
+my_dict = {my_list[i]: i for i in range(len(my_list))}
+
+dtype1 = {i: str for i in names}
+dtype2 = {j: float for j in tempnames}
+print(dtype1)
+print(dtype2)
+dtype1.update(dtype2)
+print(dtype1)
+# USed to cleanup below
+#temp_df=pd.read_csv(name_to_read)
+#temp_df = temp_df.drop(temp_df[temp_df['temp1'] == 'DA'].index)
+#temp_df = temp_df.drop(temp_df[temp_df['temp2'] == 'DA'].index)
+#temp_df = temp_df.drop(temp_df[temp_df['temp3'] == 'DA'].index)
+#temp_df = temp_df.drop(temp_df[temp_df['temp4'] == 'DA'].index)
+#temp_df.dropna(inplace=True)
+#temp_df.to_csv("testing_cleanup.csv",index=False)
 temp_df=pd.read_csv(name_to_read)
 
+print(temp_df.head())
+print(type(temp_df.addr1.values[0]))
 #print("Read in {} rows and with {} variables".format(temp_df.shape[0], temp_df.shape[1]))
 print("  => First Timestamp: {}".format(temp_df.iloc[0].time))
 print("  => Last Timestamp : {}".format(temp_df.iloc[-1].time))
 #times_zeroed = pd.to_datetime(temp_df['time'])
 #print(type(times_zeroed[0]))
 times_zeroed=temp_df['time'].values - temp_df['time'].values[0]
-
+temp_df['RealTimes']=times_zeroed
 #calc the pumpdown time
+print(type(temp_df.temp1.values[0]))
 
-min_pos=temp_df['temp'].idxmin()
+print(temp_df.addr1.unique)
+min_pos=temp_df['temp1'].idxmin()
 
-print("Time at min {} and temp change {} are ".format(times_zeroed[min_pos]/60, temp_df['temp'].values[0]-temp_df['temp'].min()))
+print("Time at min {} and temp change {} are ".format(times_zeroed[min_pos]/60, temp_df['temp1'].values[0]-temp_df['temp1'].min()))
 # Now make a plot
 fig = plt.figure(figsize=(14, 10), dpi=200)
 axs=fig.add_subplot(111)
@@ -41,13 +70,75 @@ axs=fig.add_subplot(111)
 #axs[0].set_ylabel("Pressure (Torr)")
 #axs[0].set_ylim([1, 759])
 
+labelling=["cold plate","thermal braid","Heatsink", "dummy load"]
+#temp1 is 0 which is cold plate, temp2 is D0 ois thermal braid
+axs.scatter(temp_df.RealTimes, temp_df.temp1, marker='.', s=3, label=labelling[0]) #this is a temp by the inflections.
+axs.scatter(temp_df.RealTimes, temp_df.temp2, marker='*', color='k', s=3,label = labelling[1]) #this is a temp by the inflections.
+axs.scatter(temp_df.RealTimes, temp_df.temp3, marker='+', color='r', s=3,label = labelling[2]) #this is a temp by the inflections.
+axs.scatter(temp_df.RealTimes, temp_df.temp4, marker='o', color='m', s=3,label = labelling[3]) #this is a temp by the inflections.
+turn_on_dummies=10
+cold_plating=2600
+power_on=3950
+higher_power=8400
+ending=17200
+axs.axvline(x=turn_on_dummies-5,ymin=0, ymax=1, ls=':', color='Brown')
+axs.text(turn_on_dummies, -7, "Pretesting", color='Brown', rotation=90, fontsize=8)
+axs.axvline(x=cold_plating-5,ymin=0, ymax=1, ls=':', color='Brown')
+axs.text(cold_plating, -7, "TVAC start", color='Brown', rotation=90, fontsize=8)
+axs.axvline(x=power_on-5,ymin=0, ymax=1, ls=':', color='Brown')
+axs.text(power_on, -7, "DCT HSK ON", color='Brown', rotation=90, fontsize=8)
+axs.axvspan(power_on, higher_power, alpha=0.1, color='royalblue',label="Power On default")
+axs.axvspan(higher_power, ending, alpha=0.1, color='cyan', label="Worst Case")
+#axs.axvspan(hot_case_start,hot_case_end , alpha=0.1, color='firebrick', label="hot case")
+#axs.axvspan(kickflip_start,kickflip_end , alpha=0.3, hatch="XXX", color='darkorange', label="flipped hot case")
 
-axs.scatter(times_zeroed, temp_df['temp'], marker='.',s=3) #this is a temp by the inflections.
+#axs[1].axvline(x=discharge_magnet,ymin=0, ymax=1, ls=':',color='Brown')
+#axs[1].axvline(x=cold_wall_fill_start,ymin=0, ymax=1, color='black',label="cold wall fill start")
+#axs[1].axvline(x=cold_wall_fill_end,ymin=0, ymax=1, color='black',label="cold wall fill start")
+
+#axs.scatter(temp_df[temp_df.addr=="DA"].RealTimes, temp_df[temp_df.addr=="D1"].temp, marker='*',color='k',s=3,label="Copper Plate") #this is a temp by the inflections.
+#axs.scatter(temp_df[temp_df.addr=="D0"].RealTimes, temp_df[temp_df.addr=="62"].temp, marker='+',color='r',s=3,label="Wedgelock") #this is a temp by the inflections.
+#axs.scatter(temp_df[temp_df.addr=="10"].RealTimes, temp_df[temp_df.addr=="22"].temp, marker='o',s=3,color='m',label="TURFIO Heatsink back") #this is a temp by the inflections.
+
+#dataframe[dataframe['Percentage'] > 70] 
 #axs.scatter(times, magnetflows_array[:,0], marker='.',s=3) #this is a dictionary in each element of the array
 #axs.scatter(times, Xadc_array[:,0], marker='.',s=3) #these are xadc for FPGA so array of voltages and temps somewhere
 #axs.scatter(times, df['payload.fSFCStatus.fATX_V33'], marker='.',s=3) #this one is always 0
 #axs.scatter(times, df['payload.fSFCStatus.fMB_V33SB'], marker='.',s=3) #this one is always 3.2 ish
 #axs.scatter(times, df['payload.fSFCStatus.fMB_V33'], marker='.',s=3) #this one is always 2.56
+plt.xlabel("Time(s)")
+plt.ylabel("Temp (C)")
+plt.ylim([-10,80])
+plt.grid()
+handles, labels = axs.get_legend_handles_labels()
+#lgd = axs.legend(handles, labels)
+lgd=fig.legend(handles, labels, loc='upper center', ncol=5, fontsize=8)
+#for legend_handle in lgd.legendHandles:
+    ###legend_handle.set_sizes([20])
+#labels[6]._legmarker.set_markersize(6)
+#lgd=fig.legend(handles, labels, loc='upper center', ncol=5, fontsize=8)
+# as many of these as axs[1].scatter above
+
+
+#lgd.legendHandles[-14].set_sizes([60])
+#lgd.legendHandles[-13].set_sizes([60])
+#lgd.legendHandles[-12].set_sizes([60])
+#lgd.legendHandles[-11].set_sizes([60])
+#lgd.legendHandles[-10].set_sizes([60])
+#lgd.legendHandles[-9].set_sizes([60])
+#lgd.legendHandles[-8].set_sizes([60])
+#lgd.legendHandles[-7].set_sizes([60])
+lgd.legendHandles[-6].set_sizes([60])
+lgd.legendHandles[-5].set_sizes([60])
+lgd.legendHandles[-4].set_sizes([60])
+lgd.legendHandles[-3].set_sizes([60])
+#lgd.legendHandles[-2].set_sizes([60])
+#lgd.legendHandles[-1].set_sizes([60])#
+
+#plt.savefig("plot_timeline_south.pdf", bbox_inches='tight')
+
+#plt.savefig("plot_timeline_south.png")
+
 plt.show()
 # now in hours
 # do conversions...
